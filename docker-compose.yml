@@ -1,0 +1,33 @@
+version: '2'
+services:
+  postgres:
+    image: postgres
+  app:
+    build:
+      dockerfile: Dockerfile.rails
+      context: .
+      args: &user_args
+        USER: "${USER}"
+    command: bundle exec rails s -b 0.0.0.0
+    volumes:
+      - ./yespark:/code
+    tty: true
+    stdin_open: true
+    depends_on:
+      - postgres
+    env_file:
+      - ./env_docker
+  proxy:
+    networks:
+      default:
+        aliases:
+          - www.yespark.io
+          - api.yespark.io
+    image: nginx
+    volumes:
+      - ./config/nginx/yespark.io:/etc/nginx/nginx.conf
+      - ./config/nginx/ssl:/etc/nginx/ssl
+    depends_on: [app]
+    ports:
+      - 80:80
+      - 443:443

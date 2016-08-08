@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -e
+
+export COMPOSE_FILE=docker-compose.yml
+
+echo "Installing yespark gems. This may take some times"
+docker-compose run --rm app bundle install --path vendor
+
+echo "Starting application"
+docker-compose up -d

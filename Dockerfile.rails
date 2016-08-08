@@ -1,0 +1,36 @@
+FROM ruby:2.2
+
+ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_PRIORITY critical
+ENV DEBCONF_NOWARNINGS yes
+
+ENV APP_ROOT /code
+ENV BUNDLE_APP_CONFIG ${APP_ROOT}/.bundle
+ENV APP_PORT 3000
+
+RUN mkdir -p ${BUNDLE_APP_CONFIG}
+
+RUN apt-get update -qq \
+    && apt-get install -y nodejs npm graphicsmagick\
+    && apt-get purge --auto-remove -y \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN ln -s /usr/bin/nodejs /usr/bin/node
+ARG USER=nobody
+RUN useradd --comment "Docker image user" --create-home ${USER}
+USER ${USER}
+
+WORKDIR ${APP_ROOT}
+
+EXPOSE 3000
+
+ENV GEM_HOME=/home/${USER}/gems/2.2
+ENV GEM_PATH=/home/${USER}/gems/2.2
+
+RUN gem install bundler
+RUN npm config set prefix=$APP_ROOT/node
+
+ENV PATH $APP_ROOT/node/bin:$PATH
+
+VOLUME ["${APP_ROOT}"]
